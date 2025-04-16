@@ -1,28 +1,33 @@
 {
-  "name": "viveo-backend",
-  "version": "1.0.0",
-  "description": "An online e-commerce shop",
-  "main": "server.js",
-  "scripts": {
-    "test": "nodemon server.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/FruitfulEjiro/viveo-backend.git"
-  },
-  "author": "Fruitful Ejiro",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/FruitfulEjiro/viveo-backend/issues"
-  },
-  "homepage": "https://github.com/FruitfulEjiro/viveo-backend#readme",
-  "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "express": "^5.1.0",
-    "express-async-handler": "^1.2.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.15.0",
-    "mongoose": "^8.13.2",
-    "nodemon": "^3.1.9"
-  }
+   "name": "viveo-backend",
+   "version": "1.0.0",
+   "description": "An online e-commerce shop",
+   "main": "server.js",
+   "type": "module",
+   "scripts": {
+      "start": "nodemon server.js"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/FruitfulEjiro/viveo-backend.git"
+   },
+   "author": "Fruitful Ejiro",
+   "license": "MIT",
+   "bugs": {
+      "url": "https://github.com/FruitfulEjiro/viveo-backend/issues"
+   },
+   "homepage": "https://github.com/FruitfulEjiro/viveo-backend#readme",
+   "dependencies": {
+      "bcryptjs": "^3.0.2",
+      "cookie-parser": "^1.4.7",
+      "dotenv": "^16.5.0",
+      "express": "^5.1.0",
+      "express-async-handler": "^1.2.0",
+      "jsonwebtoken": "^9.0.2",
+      "mongodb": "^6.15.0",
+      "mongoose": "^8.13.2",
+      "nodemailer": "^6.10.1",
+      "nodemon": "^3.1.9",
+      "validator": "^13.15.0"
+   }
 }
