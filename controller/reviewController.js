@@ -37,9 +37,12 @@ export const createReview = CatchAsync(async (req, res, next) => {
 
    if (!review) return next(new AppError("Review not created!! Try again!", 500));
 
-   // Add the review to the product
-   product.reviews.push(review._id);
-   await product.save();
+   // Add the review to the product - using instance methods
+   product.addReview(review._id);
+
+   // save product
+   const updateProduct = await product.save();
+   if (!updateProduct) return next(new AppError("Product not added to product!! Try again!", 500));
 
    res.status(201).json({
       success: true,
@@ -101,20 +104,6 @@ export const updateReview = CatchAsync(async (req, res, next) => {
    });
 });
 
-// Delete a review
-export const deleteReview = CatchAsync(async (req, res, next) => {
-   const { id } = req.params;
-
-   // Check if the review exists
-   const review = await Review.findByIdAndDelete(id);
-   if (!review) return next(new AppError("Review not found", 404));
-
-   res.status(200).json({
-      success: true,
-      message: "Review deleted successfully",
-   });
-});
-
 // Get all reviews
 export const getAllReviews = CatchAsync(async (req, res, next) => {
    const reviews = await Review.find().populate("user", "name email").populate("product", "name price");
@@ -168,5 +157,19 @@ export const getReviewsByRating = CatchAsync(async (req, res, next) => {
       data: {
          reviews,
       },
+   });
+});
+
+// Delete a review
+export const deleteReview = CatchAsync(async (req, res, next) => {
+   const { id } = req.params;
+
+   // Check if the review exists
+   const review = await Review.findByIdAndDelete(id);
+   if (!review) return next(new AppError("Review not found", 404));
+
+   res.status(200).json({
+      success: true,
+      message: "Review deleted successfully",
    });
 });

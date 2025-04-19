@@ -28,8 +28,14 @@ const ProductSchema = new mongoose.Schema({
       default: true,
    },
    image: {
-      type: String,
-      required: true,
+      imageUrl: {
+         type: String,
+         required: true,
+      },
+      publicId: {
+         type: String,
+         required: true,
+      },
    },
    imageArray: [
       {
@@ -44,11 +50,7 @@ const ProductSchema = new mongoose.Schema({
       type: Date,
       default: Date.now,
    },
-   ratings: {
-      type: Number,
-      default: 0,
-   },
-   averageRating: {
+   rating: {
       type: Number,
       default: 0,
    },
@@ -98,6 +100,10 @@ ProductSchema.pre("save", function (next) {
    this.updatedAt = Date.now();
    next();
 });
+ProductSchema.pre("save", function (next) {
+   if (!this.isNew) this.set({ updatedAt: Date.now });
+   next();
+});
 ProductSchema.pre("updateOne", function (next) {
    this.set({ updatedAt: Date.now() });
    next();
@@ -106,6 +112,25 @@ ProductSchema.pre("save", function (next) {
    this.quantity >= 1 ? (this.inStock = true) : (this.inStock = false);
    next();
 });
+
+// Instance Methods
+ProductSchema.methods.calculateAverageRating = function () {
+   if (this.reviews.length === 0) return 0;
+   const totalRating = this.reviews.reduce((acc, review) => acc + review.rating, 0);
+   return totalRating / this.reviews.length;
+};
+ProductSchema.methods.calculateTotalReviews = function () {
+   return this.reviews.length;
+};
+ProductSchema.methods.updateStock = function (quantity) {
+   this.quantity += Number(quantity);
+   this.inStock = this.quantity > 0;
+};
+ProductSchema.methods.addReview = function (reviewId) {
+   this.reviews.push(reviewId);
+   this.totalReviews = this.calculateTotalReviews();
+   this.rating = this.calculateAverageRating();
+};
 
 const Product = mongoose.model("Product", ProductSchema);
 
