@@ -8,7 +8,6 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
-import { uploadImageCloudinary } from "./middleware/cloudinary.js";
 
 const app = express();
 
@@ -22,26 +21,6 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/product", productRoutes);
 app.use("/review", reviewRoutes);
-
-app.post("/upload-image", (req, res) => {
-   console.log(req.body.file);
-   const file = req.body.file;
-   uploadImageCloudinary(file)
-      .then((result) => {
-         res.status(200).json({
-            success: true,
-            message: "Image uploaded successfully",
-            data: result,
-         });
-      })
-      .catch((error) => {
-         res.status(500).json({
-            success: false,
-            message: "Image upload failed",
-            error: error.message,
-         });
-      });
-});
 
 // Error Handling
 app.use(ErrorHandler);

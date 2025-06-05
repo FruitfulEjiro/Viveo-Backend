@@ -22,7 +22,6 @@ const createSendToken = (user, code, res) => {
       data: {
          user,
       },
-      redirect: "/",
    });
    user.password = undefined;
 };

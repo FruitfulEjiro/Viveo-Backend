@@ -15,8 +15,8 @@ cloudinary.config({
 });
 
 // Upload image to Cloudinary
-export const uploadImageCloudinary = CatchAsync(async (filePath) => {
-   const uploadResult = await cloudinary.uploader.upload(filePath);
+export const uploadImageCloudinary = CatchAsync(async (file) => {
+   const uploadResult = await cloudinary.uploader.upload(file);
 
    if (!uploadResult) return next(new AppError("Problem Uploading Image!! Try again", 500));
 

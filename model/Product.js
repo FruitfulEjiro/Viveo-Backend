@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+// Local Module
+import { uploadImageCloudinary, deleteImageCloudinary } from "../middleware/cloudinary.js";
+import AppError from "../utils/AppError.js";
+
 const ProductSchema = new mongoose.Schema({
    name: {
       type: String,
@@ -39,7 +43,14 @@ const ProductSchema = new mongoose.Schema({
    },
    imageArray: [
       {
-         type: String,
+         imageUrl: {
+            type: String,
+            required: true,
+         },
+         publicId: {
+            type: String,
+            required: true,
+         },
       },
    ],
    createdAt: {
@@ -112,20 +123,38 @@ ProductSchema.pre("save", function (next) {
    this.quantity >= 1 ? (this.inStock = true) : (this.inStock = false);
    next();
 });
+// Remove all reviews associated with this product
+ProductSchema.pre("remove", async function (next) {
+   await this.model("Review").deleteMany({ product: this._id });
+   next();
+});
+// delete image from cloudinary
+ProductSchema.pre("remove", async function (next) {
+   // delete image from cloudinary
+   const { public_id } = this.image;
+   if (public_id) {
+      const deleteImage = await deleteImageCloudinary(public_id);
+      if (!deleteImage) return next(new AppError("Couldnt delete Image. Try again!!!", 500));
+   }
+});
 
 // Instance Methods
+// calculate average rating
 ProductSchema.methods.calculateAverageRating = function () {
    if (this.reviews.length === 0) return 0;
    const totalRating = this.reviews.reduce((acc, review) => acc + review.rating, 0);
    return totalRating / this.reviews.length;
 };
+// calculate total reviews
 ProductSchema.methods.calculateTotalReviews = function () {
    return this.reviews.length;
 };
+// update quantity and inStock when new stock are added
 ProductSchema.methods.updateStock = function (quantity) {
    this.quantity += Number(quantity);
    this.inStock = this.quantity > 0;
 };
+// add review id to product and claculate total reviews and rating
 ProductSchema.methods.addReview = function (reviewId) {
    this.reviews.push(reviewId);
    this.totalReviews = this.calculateTotalReviews();

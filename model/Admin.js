@@ -53,9 +53,21 @@ const AdminSchema = new mongoose.Schema({
          message: "Password must be at least 8 characters long and contain at least one letter and one number",
       },
    },
+   phone: {
+      type: String,
+      trim: true,
+      validate: {
+         validator: (value) => {
+            return validator.isMobilePhone(value, "any", { strictMode: false });
+         },
+         message: "Invalid phone number",
+      },
+   },
    role: {
       type: String,
+      enum: ["admin"],
       default: "admin",
+      select: false,
    },
    createdAt: {
       type: Date,
@@ -64,14 +76,17 @@ const AdminSchema = new mongoose.Schema({
    passwordChangedAt: {
       type: Date,
       default: null,
+      select: false,
    },
    passwordResetToken: {
       type: String,
       default: null,
+      select: false,
    },
    passwordResetTokenExpiry: {
       type: Date,
       default: null,
+      select: false,
    },
 });
 
@@ -89,7 +104,6 @@ AdminSchema.pre("save", function (next) {
    if (!this.isModified("password") || this.isNew) return next();
    this.passwordChangedAt = Date.now() - 1000;
 });
-
 
 // INSTANCE METHODS
 

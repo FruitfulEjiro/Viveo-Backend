@@ -10,6 +10,7 @@ import AppError from "../utils/AppError.js";
 export const createReview = CatchAsync(async (req, res, next) => {
    const id = req.user._id;
    const { rating, comment, productId } = req.body;
+   console.log(rating);
 
    // Check if the user has already reviewed the product
    const existingReview = await Review.findOne({
@@ -148,7 +149,7 @@ export const getReviewsByUser = CatchAsync(async (req, res, next) => {
 export const getReviewsByRating = CatchAsync(async (req, res, next) => {
    const { rating } = req.params;
 
-   const reviews = await Review.find({ rating }).populate("user", "name email");
+   const reviews = await Review.find({ rating }).populate("user", "name email").populate("product", "name");
    if (!reviews) return next(new AppError("No reviews found", 404));
 
    res.status(200).json({

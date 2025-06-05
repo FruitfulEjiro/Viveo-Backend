@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const UserSchema = new mongoose.Schema({
    fullname: {
@@ -45,6 +46,7 @@ const UserSchema = new mongoose.Schema({
       trim: true,
       minlength: 8,
       maxlength: 20,
+      select: false,
       validate: {
          validator: (value) => {
             // Check if password is at least 8 characters long and contains at least one letter and one number
@@ -55,7 +57,6 @@ const UserSchema = new mongoose.Schema({
    },
    phone: {
       type: String,
-      required: true,
       trim: true,
       validate: {
          validator: (value) => {
@@ -64,25 +65,11 @@ const UserSchema = new mongoose.Schema({
          message: "Invalid phone number",
       },
    },
-   reviews: [
-      {
-         type: mongoose.Schema.Types.ObjectId,
-         ref: "Review",
-      },
-   ],
-   totalReviews: {
-      type: Number,
-      default: 0,
-   },
-   tags: [
-      {
-         type: String,
-      },
-   ],
    role: {
       type: String,
       enum: ["user"],
       default: "user",
+      select: false,
    },
    createdAt: {
       type: Date,
@@ -91,14 +78,17 @@ const UserSchema = new mongoose.Schema({
    passwordChangedAt: {
       type: Date,
       default: null,
+      select: false,
    },
    passwordResetToken: {
       type: String,
       default: null,
+      select: false,
    },
-   passwordResetTokenExpiry: {
+   passwordResetExpires: {
       type: Date,
       default: null,
+      select: false,
    },
 });
 
@@ -123,6 +113,23 @@ UserSchema.pre("save", function (next) {
 UserSchema.methods.comparePassword = async function (password) {
    return await bcrypt.compare(password, this.password);
 };
+
+// Method to create a password reset token
+UserSchema.methods.createPasswordResetToken = async function () {
+   const resetToken = crypto.randomBytes(32).toString("hex");
+
+   this.passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+   return resetToken;
+};
+
+UserSchema.methods.changedPasswordAt = function(JWTTimeStamp) {
+   if (this.passwordChangedAt) {
+     return JWTTimeStamp < this.passwordChangedAt;
+   }
+ };
 
 const User = mongoose.model("User", UserSchema);
 

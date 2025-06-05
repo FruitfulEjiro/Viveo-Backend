@@ -1,11 +1,15 @@
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Create Transporter
 const transporter = nodemailer.createTransport({
-   service: "", // Use your email provider
+   host: process.env.EMAIL_HOST,
+   port: process.env.EMAIL_PORT,
    auth: {
-      user: process.env.EMAIL_USER, // Your email
-      pass: process.env.EMAIL_PASS, // Your email password
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
    },
 });
 

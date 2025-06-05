@@ -1,31 +1,28 @@
 import CatchAsync from "express-async-handler";
 
 // Local Modules
-import { uploadImageCloudinary } from "../middleware/cloudinary.js";
+import { uploadImageCloudinary, deleteImageCloudinary } from "../middleware/cloudinary.js";
 import Product from "../model/Product.js";
 import AppError from "../utils/AppError.js";
 
 // Create Product
 export const createProduct = CatchAsync(async (req, res, next) => {
    const { name, price, description, category, quantity, image, imageArray, tags } = req.body;
-   // console.log(req.body);
 
    // Validate input
    if (!name || !description || !price || !category) {
       return res.status(400).json({ message: "Name, Description, price and Category are required" });
    }
 
-   // images hsould be converted to base64 before sent in the request obj
+   // images should be converted to base64 before sent in the request obj
    // Upload images to Cloudinary
-   let imageObj = "";
+   let imageObj = {};
    let imageObjArray = [];
    if (image) {
       const result = await uploadImageCloudinary(image);
       if (!result) return next(new AppError("Couldnt upload Image!! Try again", 500));
-      imageObj = {
-         imageUrl: result.secure_url,
-         publicId: result.public_id,
-      };
+      imageObj.imageUrl = result.secure_url;
+      imageObj.publicId = result.public_id;
    }
    if (imageArray) {
       imageArray.forEach(async (image) => {
@@ -45,6 +42,7 @@ export const createProduct = CatchAsync(async (req, res, next) => {
       description,
       category,
       image: imageObj,
+      imageArray: imageObjArray,
       quantity,
       tags,
    });
@@ -65,6 +63,42 @@ export const getAllProducts = CatchAsync(async (req, res, next) => {
    const products = await Product.find();
 
    if (!products) return next(new AppError("No products found", 404));
+
+   res.status(200).json({
+      status: "success",
+      message: "Products retrieved successfully",
+      results: products.length,
+      data: {
+         products,
+      },
+   });
+});
+
+// Get Product By Category
+export const getProductsByCategory = CatchAsync(async (req, res, next) => {
+   const { category } = req.params;
+
+   // check if products with category exists
+   const products = await Product.find({ category });
+   if (!products || products.length === 0) return next(new AppError("No Products Found", 404));
+
+   res.status(200).json({
+      status: "success",
+      message: "Products retrieved successfully",
+      results: products.length,
+      data: {
+         products,
+      },
+   });
+});
+
+// Get Products by Tags
+export const getProductsByTag = CatchAsync(async (req, res, next) => {
+   const { tag } = req.params;
+
+   // check if products with tag exist
+   const products = await Product.find({ tags: tag });
+   if (!products || products.length) return next(new AppError("No Products Found", 404));
 
    res.status(200).json({
       status: "success",
@@ -111,7 +145,7 @@ export const updateProduct = CatchAsync(async (req, res, next) => {
    if (quantity) product.updateStock(quantity);
 
    // save product
-   product.save({ validateBeforeSave: false });
+   await product.save({ validateBeforeSave: false });
 
    if (!product) return next(new AppError("Product not found", 404));
 
@@ -130,9 +164,15 @@ export const deleteProduct = CatchAsync(async (req, res, next) => {
 
    const product = await Product.findByIdAndDelete(id);
 
+   // delete image from cloudinary
+   const deleteImage = await deleteImageCloudinary(product.image.publicId);
+   if (!deleteImage) return next(new AppError("Couldnt delete Image. Try again!!!", 500));
+
+   // delete product
+   const deleteProduct = await product.remove();
    if (!product) return next(new AppError("Product not found", 404));
 
-   res.status(200).json({
+   res.status(204).json({
       status: "success",
       message: "Product deleted successfully",
    });
